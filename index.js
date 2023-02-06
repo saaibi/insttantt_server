@@ -1,33 +1,47 @@
-const express = require("express");
+require('dotenv').config();
+const express = require("express"),
+    morgan = require("morgan"),
+    path = require("path"),
+    cors = require("cors"),
+    app = express();
 
-const app = express();
-const http = require('http').createServer(app);
-const io = require('socket.io')(http)
-const path = require("path");
-const fs = require('fs'); 
+const mongoose = require('mongoose');
+const mongoString = process.env.DATABASE_URL;
 
-// const dev = process.env.NODE_ENV !== 'production';
+mongoose.connect(mongoString);
+const database = mongoose.connection;
+
+database.on('error', (error) => {
+    console.log(error)
+})
+
+database.once('connected', () => {
+    console.log('Database Connected');
+})
+const dev = process.env.NODE_ENV !== 'production';
 
 // Setings
 app.set('port', process.env.PORT || 4000);
 
-// socket
-io.on('connection', () => {
-    const data = fs.readFileSync('package.json', { encoding: 'utf8', flag: 'r' });
-    const { version } = JSON.parse(data)
-    io.emit('newVersion', version);
-    // socket.on('disconnect', () => {
-    //    console.log('Disconnected!');
-    // });
-});
+// Middlewares
+app.use(morgan('dev'))
+    .use(express.json())
+    .use(cors())
+    .use(cors({ origin: ['http://localhost:4000', 'https://laboratorio-lacma.herokuapp.com'] }));
 
-// Static 
-app.use(express.static(path.resolve('build')));
+// Routes
+app.use('/api/users', require('./routes/user.routes'));
 
-// App
-app.get('*', (req, res) => {
-    res.sendFile(path.resolve('build', 'index.html'))
-});
+//Static 
+if (!dev) {
+    // "postinstall": "npm run prod"
+    app.use(express.static(path.resolve('app/dist')));
+    app.get('*', (req, res) => {
+        res.sendFile(path.resolve('app/dist', 'index.html'))
+    });
+}
 
 // Start Server
-http.listen(app.get('port'))
+app.listen(app.get('port'), () => {
+    console.log(`Server running http://localhost:${app.get('port')}`);
+});

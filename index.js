@@ -18,6 +18,7 @@ database.on('error', (error) => {
 database.once('connected', () => {
     console.log('Database Connected');
 })
+
 const dev = process.env.NODE_ENV !== 'production';
 
 // Setings
@@ -27,14 +28,13 @@ app.set('port', process.env.PORT || 4000);
 app.use(morgan('dev'))
     .use(express.json())
     .use(cors())
-    .use(cors({ origin: ['http://localhost:4000', 'https://laboratorio-lacma.herokuapp.com'] }));
+    .use(cors({ origin: ['http://localhost:3000'] }));
 
 // Routes
 app.use('/api/users', require('./routes/user.routes'));
 
 //Static 
 if (!dev) {
-    // "postinstall": "npm run prod"
     app.use(express.static(path.resolve('app/dist')));
     app.get('*', (req, res) => {
         res.sendFile(path.resolve('app/dist', 'index.html'))

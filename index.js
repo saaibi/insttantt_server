@@ -3,7 +3,12 @@ const express = require("express"),
     morgan = require("morgan"),
     path = require("path"),
     cors = require("cors"),
-    app = express();
+    app = express(),
+    http = require('http'),
+    server = http.createServer(app);
+
+const { Server } = require("socket.io");
+const io = new Server(server);
 
 const mongoose = require('mongoose');
 const mongoString = process.env.DATABASE_URL;
@@ -33,13 +38,15 @@ app.use(morgan('dev'))
 // Routes
 app.use('/api/users', require('./routes/user.routes'));
 
-//Static 
-if (!dev) {
-    app.use(express.static(path.resolve('app/dist')));
-    app.get('*', (req, res) => {
-        res.sendFile(path.resolve('app/dist', 'index.html'))
-    });
-}
+// socket
+io.on('connection', () => {
+    console.log('User connected');
+    io.emit('newVersion', 'hola');
+    // socket.on('disconnect', () => {
+    //    console.log('Disconnected!');
+    // });
+});
+
 
 // Start Server
 app.listen(app.get('port'), () => {

@@ -7,10 +7,23 @@ const express = require("express"),
     http = require('http'),
     server = http.createServer(app);
 
-const { Server } = require("socket.io");
-const io = new Server(server);
+const io = require("socket.io")(server, {
+    cors: {
+        origin: "http://localhost:3000",
+    },
+});
+
+io.use((socket, next) => {
+    const username = socket.handshake.auth.username;
+    if (!username) {
+        return next(new Error("invalid username ins"));
+    }
+    socket.username = username;
+    next();
+});
 
 const mongoose = require('mongoose');
+const User = require('./models/user');
 const mongoString = process.env.DATABASE_URL;
 
 mongoose.connect(mongoString);
@@ -24,8 +37,6 @@ database.once('connected', () => {
     console.log('Database Connected');
 })
 
-const dev = process.env.NODE_ENV !== 'production';
-
 // Setings
 app.set('port', process.env.PORT || 4000);
 
@@ -38,17 +49,35 @@ app.use(morgan('dev'))
 // Routes
 app.use('/api/users', require('./routes/user.routes'));
 
-// socket
-io.on('connection', () => {
-    console.log('User connected');
-    io.emit('newVersion', 'hola');
-    // socket.on('disconnect', () => {
-    //    console.log('Disconnected!');
-    // });
+// Socket io
+io.on("connection", (socket) => {
+    socket.emit("user connected", {
+        userID: socket.id,
+        username: socket.username,
+    });
+
+    socket.on("add hobbie", async ({ content, _id, email }) => {
+        socket.join(email);
+        const { hobbies } = await User.findById(_id);
+        hobbies.push(content)
+        const query = User.findByIdAndUpdate(_id, { hobbies }, { new: true, multi: true }, (err, user) => {
+            if (err) return res.json({ error: err });
+            return user
+        });
+        await query.clone()
+        console.log('add hobbie', _id, email)
+        io.to(email).emit("add hobbie", {
+            hobbies,
+            from: socket.id,
+        });
+    });
+
+    socket.on("disconnect", () => {
+        socket.broadcast.emit("user disconnected", socket.id);
+    });
 });
 
-
 // Start Server
-app.listen(app.get('port'), () => {
+server.listen(app.get('port'), () => {
     console.log(`Server running http://localhost:${app.get('port')}`);
 });

@@ -9,5 +9,6 @@ router.get('/:id', userController.getByIdUser);
 router.post('/', userController.createUser);
 router.post('/login', userController.login);
 router.put('/:id/user', userController.updateUser);
+router.put('/:id/hobbies', userController.hobbie);
 
 module.exports = router;

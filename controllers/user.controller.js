@@ -46,4 +46,16 @@ userController.updateUser = async (req, res) => {
     await query.clone()
 };
 
+
+userController.hobbie = async (req, res) => {
+    const { hobbie } = req.body;
+    const { hobbies } = await User.findById(req.params.id);
+    hobbies.push(hobbie)
+    const query = User.findByIdAndUpdate(req.params.id, { hobbies }, { new: true, multi: true }, (err, user) => {
+        if (err) return res.json({ error: err });
+        res.json({ status: "Add Hobbie", hobbies: user.hobbies });
+    });
+    await query.clone()
+};
+
 module.exports = userController;

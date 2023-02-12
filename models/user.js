@@ -14,7 +14,8 @@ const UserSchema = new Schema({
     country: { type: String, default: '' },
     city: { type: String, default: '' },
     address: { type: String, default: '' },
-    photoProfile: { type: String, default: '' }
+    photoProfile: { type: String, default: '' },
+    hobbies: { type: Array, default: [] }
 },
     {
         versionKey: false,

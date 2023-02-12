@@ -51,6 +51,7 @@ app.use('/api/users', require('./routes/user.routes'));
 
 // Socket io
 io.on("connection", (socket) => {
+    socket.join(socket.username);
     socket.emit("user connected", {
         userID: socket.id,
         username: socket.username,

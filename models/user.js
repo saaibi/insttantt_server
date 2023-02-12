@@ -3,11 +3,11 @@ const { Schema } = mongoose;
 
 // Create Schema
 const UserSchema = new Schema({
-    email: { type: String, required: true },
-    phoneNumber: { type: Number, required: true },
+    email: { type: String, required: true, unique: true },
+    phoneNumber: { type: Number, required: true, unique: true },
     firstName: { type: String, required: true },
     lastName: { type: String, required: true },
-    documentType: { type: String, required: true },
+    documentType: { type: String, required: true, unique: true },
     documentNumber: { type: Number, required: true },
     birthdate: { type: Date, required: true },
     expeditionDate: { type: Date, required: true },
